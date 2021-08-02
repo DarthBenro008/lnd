@@ -1274,7 +1274,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		FlapCountTicker: ticker.New(chanfitness.FlapCountFlushRate),
 	})
 
-	if cfg.WtClient.Active {
+	if cfg.Watchtower.Active {
 		policy := wtpolicy.DefaultPolicy()
 
 		if cfg.WtClient.SweepFeeRate != 0 {

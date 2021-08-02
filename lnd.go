@@ -775,23 +775,6 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 			"is proxying over Tor as well", cfg.Tor.StreamIsolation)
 	}
 
-	// If the watchtower client should be active, open the client database.
-	// This is done here so that Close always executes when lndMain returns.
-	var towerClientDB *wtdb.ClientDB
-	if cfg.WtClient.Active {
-		var err error
-		towerClientDB, err = wtdb.OpenClientDB(
-			cfg.localDatabaseDir(), cfg.DB.Bolt.DBTimeout,
-		)
-		if err != nil {
-			err := fmt.Errorf("unable to open watchtower client "+
-				"database: %v", err)
-			ltndLog.Error(err)
-			return err
-		}
-		defer towerClientDB.Close()
-	}
-
 	// If tor is active and either v2 or v3 onion services have been specified,
 	// make a tor controller and pass it into both the watchtower server and
 	// the regular lnd server.
@@ -815,6 +798,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 	}
 
 	var tower *watchtower.Standalone
+	var towerClientDB *wtdb.ClientDB
 	if cfg.Watchtower.Active {
 		// Segment the watchtower directory by chain and network.
 		towerDBDir := filepath.Join(
@@ -822,6 +806,19 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 			cfg.registeredChains.PrimaryChain().String(),
 			lncfg.NormalizeNetwork(cfg.ActiveNetParams.Name),
 		)
+
+		// Initialise watchtower to be active, open the client database.
+		// This is done here so that Close always executes when lndMain returns.
+		towerClientDB, err = wtdb.OpenClientDB(
+			cfg.localDatabaseDir(), cfg.DB.Bolt.DBTimeout,
+		)
+		if err != nil {
+			err := fmt.Errorf("unable to open watchtower client "+
+				"database: %v", err)
+			ltndLog.Error(err)
+			return err
+		}
+		defer towerClientDB.Close()
 
 		towerDB, err := wtdb.OpenTowerDB(
 			towerDBDir, cfg.DB.Bolt.DBTimeout,
@@ -892,6 +889,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 			ltndLog.Error(err)
 			return err
 		}
+
 	}
 
 	// Initialize the ChainedAcceptor.
