@@ -807,18 +807,21 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 			lncfg.NormalizeNetwork(cfg.ActiveNetParams.Name),
 		)
 
-		// Initialise watchtower to be active, open the client database.
-		// This is done here so that Close always executes when lndMain returns.
-		towerClientDB, err = wtdb.OpenClientDB(
-			cfg.localDatabaseDir(), cfg.DB.Bolt.DBTimeout,
-		)
-		if err != nil {
-			err := fmt.Errorf("unable to open watchtower client "+
-				"database: %v", err)
-			ltndLog.Error(err)
-			return err
+		// Checking if we need watchtower client to be active
+		if !cfg.WtClient.Deactivate {
+			// Initialise watchtower client to be active, open the client database.
+			// This is done here so that Close always executes when lndMain returns.
+			towerClientDB, err = wtdb.OpenClientDB(
+				cfg.localDatabaseDir(), cfg.DB.Bolt.DBTimeout,
+			)
+			if err != nil {
+				err := fmt.Errorf("unable to open watchtower client "+
+					"database: %v", err)
+				ltndLog.Error(err)
+				return err
+			}
+			defer towerClientDB.Close()
 		}
-		defer towerClientDB.Close()
 
 		towerDB, err := wtdb.OpenTowerDB(
 			towerDBDir, cfg.DB.Bolt.DBTimeout,
