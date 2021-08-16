@@ -15,6 +15,10 @@ type WtClient struct {
 	// SweepFeeRate specifies the fee rate in sat/byte to be used when
 	// constructing justice transactions sent to the tower.
 	SweepFeeRate uint64 `long:"sweep-fee-rate" description:"Specifies the fee rate in sat/byte to be used when constructing justice transactions sent to the watchtower."`
+
+	// Active determines whether a watchtower client should be created to
+	// Deprecated. Kept around for migration purposes. Use Deactivate instead
+	Active bool `long:"active" description:"Whether the daemon should use private watchtowers to back up revoked channel states."`
 }
 
 // Validate ensures the user has provided a valid configuration.
