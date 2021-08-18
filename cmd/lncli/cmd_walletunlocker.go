@@ -495,7 +495,7 @@ func unlock(ctx *cli.Context) error {
 	// echoed in the console.
 	case ctx.IsSet("stdin"):
 		reader := bufio.NewReader(os.Stdin)
-		pw, err = reader.ReadBytes('\n')
+		pw, err = ioutil.ReadAll(reader)
 
 		// Remove carriage return and newline characters.
 		pw = bytes.Trim(pw, "\r\n")
